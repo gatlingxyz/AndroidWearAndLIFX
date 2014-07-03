@@ -3,6 +3,8 @@
     package="com.gatling.wearlifx" >
 
     <uses-feature android:name="android.hardware.type.watch" />
+    <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -15,6 +17,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:label="@string/watchface_digitalog_name" android:name=".TestMe" android:enabled="@bool/config_enableWatchFaceDigitalog" android:taskAffinity="" android:allowEmbedded="true">
+            <meta-data android:name="com.google.android.clockwork.home.preview" android:resource="@drawable/ic_launcher" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.google.android.clockwork.home.category.HOME_BACKGROUND" />
             </intent-filter>
         </activity>
 
