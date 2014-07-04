@@ -36,6 +36,7 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
     public void onReadyForContent() {
         setContentView(R.layout.activity_main);
 
+        //  Is needed for communication between the wearable and the device.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
@@ -49,6 +50,7 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
 
         mGoogleApiClient.connect();
 
+        //  This, or at least getNodes() has to be done in the background. Explanation there.
         new AsyncTask<Void, Void, List<Node>>(){
 
             @Override
@@ -78,6 +80,7 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
             }
         }.execute();
 
+        //  Just a regular activity from here. Views and such.
         progress = findViewById(R.id.progress);
         onOffView = findViewById(R.id.on_off_layout);
 
@@ -89,6 +92,14 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
 
     }
 
+    /**
+     * This method will generate all the nodes that are attached to a Google Api Client.
+     * Now, theoretically, only one should be: the phone. However, they return us more
+     * than one. In the case where the phone happens to not be the first/only, I decided to
+     * make a List of all the nodes and we'll loop through them and send each of them
+     * a message.
+     * @return  The List of Nodes
+     */
     private List<Node> getNodes() {
         List<Node> nodes = new ArrayList<Node>();
         NodeApi.GetConnectedNodesResult rawNodes =
@@ -115,6 +126,13 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
 
     }
 
+    /**
+     * This simply sends a message to the phone with the path "/lights/all/on" or "lights/all/off".
+     * This is set up to be expandable, so you can target specific lights, but will probably never
+     * become that right now. {@code setResultCallback} can be used in place of {@code await}; the
+     * former will make the call asynchronously and provide a callback for when it's completed.
+     * @param path
+     */
     public void toggleLights(String path){
         String togglePath = "/lights/all/" + path;
 
@@ -134,6 +152,12 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
         }
     }
 
+    /**
+     * This method receives messages from the connected device.
+     * For some reason, trying to alter views in this method threw thread errors.
+     * To solve this, I simple use {@code runOnUiThread}.
+     * @param messageEvent
+     */
     @Override
     public void onMessageReceived(final MessageEvent messageEvent) {
 
@@ -157,6 +181,11 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
 
     }
 
+    /**
+     * This is just a simple animation I got from Google documentation.
+     * @param from The starting view
+     * @param to The view being transitioned to.
+     */
     private void crossfade(final View from, View to) {
         to.setAlpha(0f);
         to.setVisibility(View.VISIBLE);
@@ -175,6 +204,7 @@ public class MainActivity extends InsetActivity implements View.OnClickListener,
                     }
                 });
     }
+
 
     @Override
     public void onConnected(Bundle bundle) {

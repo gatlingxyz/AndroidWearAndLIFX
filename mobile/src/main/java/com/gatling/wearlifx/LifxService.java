@@ -26,7 +26,7 @@ import lifx.java.android.light.LFXTaggedLightCollection;
 import lifx.java.android.network_context.LFXNetworkContext;
 
 /**
- * Created by gimmiepepsi on 6/30/14.
+ * Most of this sample code is for communicating with LIFX and the watch.
  */
 public class LifxService extends WearableListenerService {
 
@@ -39,11 +39,19 @@ public class LifxService extends WearableListenerService {
     public void onCreate() {
         super.onCreate();
 
+        //  As noted in the LIFX samples, this may be needed.
         WifiManager wifi;
         wifi = (WifiManager) getSystemService( Context.WIFI_SERVICE);
         ml = wifi.createMulticastLock("lifx_samples_tag");
         ml.acquire();
 
+        /**
+         * The following is very important for LIFX.
+         * After calling {@code connect()} it is not instantly connected.
+         * While testing this, I called things immediately after connect and
+         * it threw errors. Only when my phone accidentally rotated did I realize
+         * what was going on. Wait for a connection with LIFX before proceeding.
+         */
         LFXClient client = LFXClient.getSharedInstance( getApplicationContext());
         networkContext = client.getLocalNetworkContext();
         networkContext.addNetworkContextListener(new LFXNetworkContext.LFXNetworkContextListener() {
@@ -69,6 +77,7 @@ public class LifxService extends WearableListenerService {
         });
         networkContext.connect();
 
+        //  Needed for communication between watch and device.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
@@ -93,6 +102,11 @@ public class LifxService extends WearableListenerService {
 
     }
 
+    /**
+     * Here, the device actually receives the message that the phone sent, as a path.
+     * We simply check that path's last segment and act accordingly.
+     * @param messageEvent
+     */
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
 
