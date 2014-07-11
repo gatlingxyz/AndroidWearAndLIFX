@@ -2,7 +2,6 @@ package com.gatling.wearlifx;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -13,12 +12,8 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import lifx.java.android.client.LFXClient;
 import lifx.java.android.entities.LFXTypes;
@@ -34,6 +29,7 @@ public class LifxService extends WearableListenerService {
     private LFXNetworkContext networkContext;
     private WifiManager.MulticastLock ml = null;
     private GoogleApiClient mGoogleApiClient;
+    private Node peerNode;
 
     @Override
     public void onCreate() {
@@ -45,6 +41,37 @@ public class LifxService extends WearableListenerService {
         ml = wifi.createMulticastLock("lifx_samples_tag");
         ml.acquire();
 
+        //  Needed for communication between watch and device.
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(Bundle connectionHint) {
+                        Log.d(TAG, "onConnected: " + connectionHint);
+                    }
+                    @Override
+                    public void onConnectionSuspended(int cause) {
+                        Log.d(TAG, "onConnectionSuspended: " + cause);
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(ConnectionResult result) {
+                        Log.d(TAG, "onConnectionFailed: " + result);
+                    }
+                })
+                .addApi(Wearable.API)
+                .build();
+
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onPeerConnected(Node peer) {
+        peerNode = peer;
+        connectToLifx();
+    }
+
+    private void connectToLifx(){
         /**
          * The following is very important for LIFX.
          * After calling {@code connect()} it is not instantly connected.
@@ -76,30 +103,6 @@ public class LifxService extends WearableListenerService {
             }
         });
         networkContext.connect();
-
-        //  Needed for communication between watch and device.
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(Bundle connectionHint) {
-                        Log.d(TAG, "onConnected: " + connectionHint);
-                    }
-                    @Override
-                    public void onConnectionSuspended(int cause) {
-                        Log.d(TAG, "onConnectionSuspended: " + cause);
-                    }
-                })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(ConnectionResult result) {
-                        Log.d(TAG, "onConnectionFailed: " + result);
-                    }
-                })
-                .addApi(Wearable.API)
-                .build();
-
-        mGoogleApiClient.connect();
-
     }
 
     /**
@@ -113,59 +116,34 @@ public class LifxService extends WearableListenerService {
         Log.v(TAG, "msg rcvd");
         Log.v(TAG, messageEvent.getPath());
 
-        if(messageEvent.getPath().endsWith("on")){
-            networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.ON);
+        if(networkContext != null) {
+            if (messageEvent.getPath().endsWith("on")) {
+                networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.ON);
+            } else if (messageEvent.getPath().endsWith("off")) {
+                networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.OFF);
+            }
         }
-        else if(messageEvent.getPath().endsWith("off")){
-            networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.OFF);
-        }
-        else{
-
-        }
-
     }
 
     private void tellWatchConnectedState(final String state){
 
-        new AsyncTask<Void, Void, List<Node>>(){
+        Log.v(TAG, "telling " + peerNode.getId() + " i am " + state);
 
+        PendingResult<MessageApi.SendMessageResult> result = Wearable.MessageApi.sendMessage(
+                mGoogleApiClient,
+                peerNode.getId(),
+                "/listener/lights/" + state,
+                null
+        );
+
+        result.setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
             @Override
-            protected List<Node> doInBackground(Void... params) {
-                return getNodes();
+            public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                Log.v(TAG, "Phone: " + sendMessageResult.getStatus().getStatusMessage());
             }
-
-            @Override
-            protected void onPostExecute(List<Node> nodeList) {
-                for(Node node : nodeList) {
-                    Log.v(TAG, "telling " + node.getId() + " i am " + state);
-
-                    PendingResult<MessageApi.SendMessageResult> result = Wearable.MessageApi.sendMessage(
-                            mGoogleApiClient,
-                            node.getId(),
-                            "/listener/lights/" + state,
-                            null
-                    );
-
-                    result.setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
-                        @Override
-                        public void onResult(MessageApi.SendMessageResult sendMessageResult) {
-                            Log.v(TAG, "Phone: " + sendMessageResult.getStatus().getStatusMessage());
-                        }
-                    });
-                }
-            }
-        }.execute();
+        });
 
     }
 
-    private List<Node> getNodes() {
-        List<Node> nodes = new ArrayList<Node>();
-        NodeApi.GetConnectedNodesResult rawNodes =
-                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
-        for (Node node : rawNodes.getNodes()) {
-            nodes.add(node);
-        }
-        return nodes;
-    }
 
 }
