@@ -1,6 +1,5 @@
 package com.gatling.wearlifx;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,7 +7,6 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -16,10 +14,7 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * Created by gimmiepepsi on 7/2/14.
- */
-public class TestMe extends Activity {
+public class WatchFace extends WatchFaceActivity {
 
     private final static IntentFilter intentFilter;
     private boolean isDimmed = false;
@@ -38,7 +33,6 @@ public class TestMe extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.watchface);
-        Log.v("Tavonwear", "the watchface is showing");
 
         time = (TextView) findViewById(R.id.time);
         battery = (TextView) findViewById(R.id.battery);
@@ -46,6 +40,7 @@ public class TestMe extends Activity {
         registerReceiver(mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         mTimeInfoReceiver.onReceive(this, registerReceiver(null, intentFilter));
         registerReceiver(mTimeInfoReceiver, intentFilter);
+
     }
 
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
@@ -70,20 +65,16 @@ public class TestMe extends Activity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    public void onScreenDim() {
         isDimmed = true;
         ((LinearLayout)findViewById(R.id.watchface)).setGravity(Gravity.CENTER);
         setColorOfText();
-
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    public void onScreenAwake() {
         isDimmed = false;
         ((LinearLayout)findViewById(R.id.watchface)).setGravity(Gravity.TOP);
         setColorOfText();
-
     }
 }

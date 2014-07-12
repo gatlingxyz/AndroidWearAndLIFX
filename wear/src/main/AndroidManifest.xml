@@ -17,7 +17,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:label="@string/watchface_digitalog_name" android:name=".TestMe" android:allowEmbedded="true">
+        <activity android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:label="@string/watchface_digitalog_name" android:name=".WatchFace" android:allowEmbedded="true">
             <meta-data android:name="com.google.android.clockwork.home.preview" android:resource="@drawable/ic_launcher" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
