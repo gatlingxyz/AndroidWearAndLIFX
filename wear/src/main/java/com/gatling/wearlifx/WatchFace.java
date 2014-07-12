@@ -7,7 +7,6 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,7 +33,6 @@ public class WatchFace extends WatchFaceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.watchface);
-        Log.v("Tavonwear", "the watchface is showing");
 
         time = (TextView) findViewById(R.id.time);
         battery = (TextView) findViewById(R.id.battery);
