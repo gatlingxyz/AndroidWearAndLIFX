@@ -62,7 +62,7 @@ public class MainActivity extends InsetActivity implements
 
     @Override
     public void onConnected(Bundle bundle) {
-        Log.v(TAG, "connected!");
+        Log.v(TAG, "connected to Google Play Services on Wear!");
         Wearable.MessageApi.addListener(mGoogleApiClient, this).setResultCallback(resultCallback);
     }
 
@@ -109,7 +109,9 @@ public class MainActivity extends InsetActivity implements
             result.setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                 @Override
                 public void onResult(MessageApi.SendMessageResult sendMessageResult) {
-                    Log.v(TAG, "we got something back");
+                    //  The message is done sending.
+                    //  This doesn't mean it worked, though.
+                    Log.v(TAG, "Our callback is done.");
                     peerNode = node;    //  Save the node that worked so we don't have to loop again.
                 }
             });
@@ -194,6 +196,7 @@ public class MainActivity extends InsetActivity implements
 
     /**
      * This is just a simple animation I got from Google documentation.
+     * Just for kicks.
      * @param from The starting view
      * @param to The view being transitioned to.
      */

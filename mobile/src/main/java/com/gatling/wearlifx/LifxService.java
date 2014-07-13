@@ -1,7 +1,5 @@
 package com.gatling.wearlifx;
 
-import android.content.Context;
-import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,30 +18,18 @@ import com.google.android.gms.wearable.WearableListenerService;
 import java.util.ArrayList;
 import java.util.List;
 
-import lifx.java.android.client.LFXClient;
-import lifx.java.android.entities.LFXTypes;
-import lifx.java.android.light.LFXTaggedLightCollection;
-import lifx.java.android.network_context.LFXNetworkContext;
-
 /**
  * Most of this sample code is for communicating with LIFX and the watch.
  */
 public class LifxService extends WearableListenerService {
 
     private String TAG = "TAVONWear";
-    private LFXNetworkContext networkContext;
-    private WifiManager.MulticastLock ml = null;
+//    private LFXNetworkContext networkContext;
     private GoogleApiClient mGoogleApiClient;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        //  As noted in the LIFX samples, this may be needed.
-        WifiManager wifi;
-        wifi = (WifiManager) getSystemService( Context.WIFI_SERVICE);
-        ml = wifi.createMulticastLock("lifx_samples_tag");
-        ml.acquire();
 
         /**
          * The following is very important for LIFX.
@@ -51,31 +37,34 @@ public class LifxService extends WearableListenerService {
          * While testing this, I called things immediately after connect and
          * it threw errors. Only when my phone accidentally rotated did I realize
          * what was going on. Wait for a connection with LIFX before proceeding.
+         * <p/>
+         * If you don't have LIFX on your wifi network, this won't work for you. Remove this
+         * chunk of code.
          */
-        LFXClient client = LFXClient.getSharedInstance( getApplicationContext());
-        networkContext = client.getLocalNetworkContext();
-        networkContext.addNetworkContextListener(new LFXNetworkContext.LFXNetworkContextListener() {
-            @Override
-            public void networkContextDidConnect(LFXNetworkContext networkContext) {
-                tellWatchConnectedState("connected");
-            }
-
-            @Override
-            public void networkContextDidDisconnect(LFXNetworkContext networkContext) {
-                tellWatchConnectedState("disconnected");
-            }
-
-            @Override
-            public void networkContextDidAddTaggedLightCollection(LFXNetworkContext networkContext, LFXTaggedLightCollection collection) {
-
-            }
-
-            @Override
-            public void networkContextDidRemoveTaggedLightCollection(LFXNetworkContext networkContext, LFXTaggedLightCollection collection) {
-
-            }
-        });
-        networkContext.connect();
+//        LFXClient client = LFXClient.getSharedInstance( getApplicationContext());
+//        networkContext = client.getLocalNetworkContext();
+//        networkContext.addNetworkContextListener(new LFXNetworkContext.LFXNetworkContextListener() {
+//            @Override
+//            public void networkContextDidConnect(LFXNetworkContext networkContext) {
+//                tellWatchConnectedState("connected");
+//            }
+//
+//            @Override
+//            public void networkContextDidDisconnect(LFXNetworkContext networkContext) {
+//                tellWatchConnectedState("disconnected");
+//            }
+//
+//            @Override
+//            public void networkContextDidAddTaggedLightCollection(LFXNetworkContext networkContext, LFXTaggedLightCollection collection) {
+//
+//            }
+//
+//            @Override
+//            public void networkContextDidRemoveTaggedLightCollection(LFXNetworkContext networkContext, LFXTaggedLightCollection collection) {
+//
+//            }
+//        });
+//        networkContext.connect();
 
         //  Needed for communication between watch and device.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -83,6 +72,9 @@ public class LifxService extends WearableListenerService {
                     @Override
                     public void onConnected(Bundle connectionHint) {
                         Log.d(TAG, "onConnected: " + connectionHint);
+                        tellWatchConnectedState("connected");
+                        //  "onConnected: null" is normal.
+                        //  There's nothing in our bundle.
                     }
                     @Override
                     public void onConnectionSuspended(int cause) {
@@ -113,15 +105,15 @@ public class LifxService extends WearableListenerService {
         Log.v(TAG, "msg rcvd");
         Log.v(TAG, messageEvent.getPath());
 
-        if(messageEvent.getPath().endsWith("on")){
-            networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.ON);
-        }
-        else if(messageEvent.getPath().endsWith("off")){
-            networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.OFF);
-        }
-        else{
-
-        }
+//        if(messageEvent.getPath().endsWith("on")){
+//            networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.ON);
+//        }
+//        else if(messageEvent.getPath().endsWith("off")){
+//            networkContext.getAllLightsCollection().setPowerState(LFXTypes.LFXPowerState.OFF);
+//        }
+//        else{
+//
+//        }
 
     }
 
